@@ -39,6 +39,11 @@ A modern, feature-rich local web-based TODO application with AI-powered task exe
 - **Flexible Sorting**: Sort by created date, due date, priority, or custom manual order
 - **Search Functionality**: Full-text search across task titles and descriptions
 - **Folder Integration**: Click on task folder path to open it in system file explorer
+- **Terminal Integration**: Click "Open Terminal" to launch a local terminal window directly in the task folder
+
+> [!NOTE]
+> The inplace-rendered terminal solution I tried does not have full functionality compared to a local shell. If you have better solution, feel free to launch a PR.
+
 - **User Profile**: Customizable profile with avatar upload, name editing, and location detection
 - **Configurable Data Directory**: Set custom storage location via environment variable
 
@@ -199,6 +204,10 @@ A new isolated folder will be created in `data/task_folders/` for each task.
 Each task has its own isolated workspace:
 - **Folder Path**: Displayed on each task card
 - **Click to Open**: Click the folder path to open it in your system's file explorer
+- **Open Terminal**: Click "Open Terminal" to launch a local terminal window directly in the task folder
+  - Automatically converts relative paths to absolute paths
+  - Works across Windows, macOS, and Linux
+  - Supports common terminal emulators (Terminal.app, cmd, gnome-terminal, etc.)
 - **Storage**: Task-specific files and notes can be stored here
 
 ### Dashboard Analytics

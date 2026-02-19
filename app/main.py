@@ -270,6 +270,51 @@ async def open_folder(request: dict):
         return {"success": False, "message": str(e)}
 
 
+@app.post("/api/open-terminal")
+async def open_terminal(request: dict):
+    """Open a terminal window in the specified folder."""
+    folder_path = request.get("path")
+    
+    if not folder_path:
+        return {"success": False, "message": "No path provided"}
+    
+    try:
+        import subprocess
+        import os
+        import platform
+        
+        # Convert relative path to absolute path
+        if not os.path.isabs(folder_path):
+            folder_path = os.path.abspath(folder_path)
+        
+        # Check if folder exists
+        if not os.path.exists(folder_path):
+            return {"success": False, "message": f"Folder does not exist: {folder_path}"}
+        
+        # Open terminal based on OS
+        system = platform.system()
+        if system == "Windows":
+            subprocess.run(["start", "cmd", "/k", f"cd /d \"{folder_path}\""], shell=True)
+        elif system == "Darwin":  # macOS
+            subprocess.run(["osascript", "-e", f'tell application "Terminal" to do script "cd \\"{folder_path}\\""'])
+        elif system == "Linux":
+            # Try common terminal emulators
+            terminals = ["gnome-terminal", "konsole", "xfce4-terminal", "xterm"]
+            for term in terminals:
+                try:
+                    subprocess.Popen([term, "--working-directory", folder_path])
+                    return {"success": True}
+                except:
+                    continue
+            return {"success": False, "message": "No terminal emulator found"}
+        else:
+            return {"success": False, "message": "Unsupported operating system"}
+        
+        return {"success": True}
+    except Exception as e:
+        return {"success": False, "message": str(e)}
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="127.0.0.1", port=8000)

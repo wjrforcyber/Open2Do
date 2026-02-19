@@ -334,7 +334,11 @@ function createTaskCard(task) {
                                                         <span class="folder-path clickable" onclick="openFolder('${escapeHtml(task.folder_path)}')" title="Click to open folder">
                                                             <i class="bi bi-folder"></i> ${escapeHtml(task.folder_path)}
                                                         </span>
-                                                    </div>                            
+                                                        <span class="terminal-link clickable" onclick="openTerminalInFolder('${escapeHtml(task.folder_path)}')" title="Click to open terminal in this folder">
+                                                            <i class="bi bi-terminal"></i> Open Terminal
+                                                        </span>
+                                                    </div>
+                            
                             ${aiTimeHtml}
                         </div>
                     </div>
@@ -578,27 +582,46 @@ async function toggleAIAction() {
     }
 }
 
-// Open folder in file explorer
-function openFolder(folderPath) {
-    // Prevent event bubbling
-    event.stopPropagation();
-    
-    // Create an API call to open the folder
-    fetch('/api/open-folder', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ path: folderPath })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (!data.success) {
-            alert(`Failed to open folder: ${data.message || 'Unknown error'}`);
+async function openFolder(folderPath) {
+    try {
+        const response = await fetch('/api/open-folder', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ path: folderPath }),
+        });
+
+        if (response.ok) {
+            showToast('Folder opened successfully', 'success');
+        } else {
+            const error = await response.json();
+            showToast(`Failed to open folder: ${error.detail}`, 'error');
         }
-    })
-    .catch(error => {
-        console.error('Error opening folder:', error);
-        alert('Error opening folder');
-    });
+    } catch (error) {
+        showToast('Failed to open folder', 'error');
+    }
+}
+
+async function openTerminalInFolder(folderPath) {
+    try {
+        const response = await fetch('/api/open-terminal', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ path: folderPath }),
+        });
+
+        if (response.ok) {
+            showToast('Terminal opened successfully', 'success');
+        } else {
+            const error = await response.json();
+            showToast(`Failed to open terminal: ${error.detail}`, 'error');
+        }
+    } catch (error) {
+        showToast('Failed to open terminal', 'error');
+    }
 }
 
 // Setup drag and drop functionality

@@ -81,6 +81,19 @@ body {
     border-top: 3px solid var(--info-color);
 }
 
+.terminal-link {
+    cursor: pointer;
+    color: var(--info-color);
+    border-bottom: 1px dotted var(--info-color);
+    transition: all 0.2s;
+    margin-left: 15px;
+}
+
+.terminal-link:hover {
+    border-bottom-style: solid;
+    color: #495057;
+}
+
 .task-card:hover {
     transform: translateX(5px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
