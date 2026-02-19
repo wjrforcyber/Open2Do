@@ -2,6 +2,8 @@
 
 A modern, feature-rich local web-based TODO application with AI-powered task execution and management.
 
+[中文文档](README_CN.md)
+
 <div align="center">
   <img src="app/static/o2dologo.png" alt="Open2Do Logo" width="200" height="200"/>
 </div>
