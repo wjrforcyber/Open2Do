@@ -30,6 +30,7 @@ A modern, feature-rich local web-based TODO application with AI-powered task exe
 
 ### Advanced Features
 - **AI-Powered Execution**: Execute tasks using iFlow CLI with AI permission checking
+- **AI Natural Language Autofill**: Parse natural language input to automatically fill forms (New Task, Filter Tasks, Sort By) with confirmation preview
 
 > [!CAUTION]
 > Although I have set permission checking, action such as accessing system files are dangerous, use at your own risk.
@@ -187,9 +188,23 @@ A new isolated folder will be created in `data/task_folders/` for each task.
 - **Filter Tasks**: Expand filter options
 - **Sort By**: Expand sort options
 
+#### AI Natural Language Autofill
+- **AI Input Box**: Type natural language commands at the top of the Tasks page
+- **Parse**: Click "Parse" to analyze your input using iFlow CLI
+- **Confirmation Preview**: Review detected form changes before applying
+- **Auto-Expand**: Forms automatically expand when autofilled
+- **Smart Detection**: Automatically identifies New Task, Filter, or Sort operations
+- **Keyword Extraction**: Extracts keywords (2-5 words) for task titles, uses full sentences for descriptions
+
+Examples:
+- "Create a high priority work task about meeting tomorrow"
+- "Show me pending tasks from the work category"
+- "Sort tasks by due date"
+
 #### Filtering Options
 - **Category**: Filter by task category
 - **Status**: Filter by task status (Pending, In Progress, Completed)
+- **Priority**: Filter by priority level (Low, Medium, High)
 - **Search**: Full-text search in titles and descriptions
 - **Created Date Range**: Filter by when tasks were created
 - **Due Date Range**: Filter by due date

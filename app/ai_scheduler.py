@@ -218,6 +218,113 @@ class AIScheduler:
             print(f"Error running iFlow CLI: {e}")
             return None
     
+    async def parse_natural_language_input(self, input: str) -> dict:
+        """
+        Parse natural language input to extract task creation, filtering, and sorting information.
+        Returns a structured dict with fields for New Task, Filter, and Sort forms.
+        """
+        try:
+            prompt = f"""
+            Parse the following natural language input and extract information for a TODO application.
+            
+            Input: {input}
+            
+            Extract information for three forms:
+            1. New Task (for creating a new task)
+            2. Filter Tasks (for filtering existing tasks)
+            3. Sort By (for sorting tasks)
+            
+            Only include fields that are explicitly mentioned in the input.
+            Omit fields that are not mentioned (use null or omit them entirely).
+            
+            For New Task:
+            - title: Extract only KEYWORDS from the input to create a concise, short title (2-5 words maximum). Focus on the main task/action only. Do NOT include details like "I would like to", "This belongs to", "has high priority", etc.
+            - category: String (task category like Work, Personal, Shopping)
+            - priority: One of "low", "medium", "high"
+            - due_date: String in ISO 8601 format (YYYY-MM-DDTHH:MM:SS) if a date/time is mentioned
+            - description: Use the FULL original input sentence as the description
+            
+            For Filter:
+            - category: String (category name to filter by)
+            - status: One of "pending", "in_progress", "completed"
+            - search: String (text to search for in task titles/descriptions)
+            - created_from: String in YYYY-MM-DD format (start of created date range)
+            - created_to: String in YYYY-MM-DD format (end of created date range)
+            - due_from: String in YYYY-MM-DD format (start of due date range)
+            - due_to: String in YYYY-MM-DD format (end of due date range)
+            
+            For Sort:
+            - by: One of "custom", "created_date", "due_date", "priority"
+            - order: One of "asc" (ascending/oldest first), "desc" (descending/newest first)
+            
+            Return ONLY a JSON object with this structure:
+            {{
+                "new_task": {{
+                    "title": "...",
+                    "category": "...",
+                    "priority": "...",
+                    "due_date": "...",
+                    "description": "..."
+                }},
+                "filter": {{
+                    "category": "...",
+                    "status": "...",
+                    "search": "...",
+                    "created_from": "...",
+                    "created_to": "...",
+                    "due_from": "...",
+                    "due_to": "..."
+                }},
+                "sort": {{
+                    "by": "...",
+                    "order": "..."
+                }}
+            }}
+            
+            Omit any entire section (new_task, filter, or sort) if no relevant information is mentioned.
+            """
+            
+            # Run iFlow CLI with prompt
+            result = await self._run_iflow(prompt)
+            
+            if result:
+                # Clean up the result - remove markdown code blocks if present
+                cleaned_result = result.strip()
+                
+                # Remove markdown code block markers if present
+                if cleaned_result.startswith('```json'):
+                    cleaned_result = cleaned_result[7:]  # Remove ```json
+                elif cleaned_result.startswith('```'):
+                    cleaned_result = cleaned_result[3:]   # Remove ```
+                
+                if cleaned_result.endswith('```'):
+                    cleaned_result = cleaned_result[:-3]  # Remove trailing ```
+                
+                cleaned_result = cleaned_result.strip()
+                
+                # Parse iFlow response
+                parsed = json.loads(cleaned_result)
+                
+                # Ensure all three sections exist even if empty
+                if "new_task" not in parsed:
+                    parsed["new_task"] = {}
+                if "filter" not in parsed:
+                    parsed["filter"] = {}
+                if "sort" not in parsed:
+                    parsed["sort"] = {}
+                
+                return parsed
+            
+        except Exception as e:
+            print(f"iFlow natural language parsing failed: {e}")
+        
+        # Return empty structure on failure
+        return {
+            "new_task": {},
+            "filter": {},
+            "sort": {}
+        }
+    
     def _check_permission_fallback(self, task: Task) -> bool:
         """Fallback keyword-based permission check when iFlow is not available."""
         description_lower = (task.description or "").lower()

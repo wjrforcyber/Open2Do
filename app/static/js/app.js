@@ -22,6 +22,7 @@ function setupEventListeners() {
     // Filter changes
     document.getElementById('filterCategory').addEventListener('change', filterTasks);
     document.getElementById('filterStatus').addEventListener('change', filterTasks);
+    document.getElementById('filterPriority').addEventListener('change', filterTasks);
     document.getElementById('filterCreatedFrom').addEventListener('change', filterTasks);
     document.getElementById('filterCreatedTo').addEventListener('change', filterTasks);
     document.getElementById('filterDueFrom').addEventListener('change', filterTasks);
@@ -63,6 +64,9 @@ function setupEventListeners() {
     
     // Auto-detect location button
     document.getElementById('detectLocationBtn').addEventListener('click', detectLocation);
+    
+    // AI autofill confirmation
+    document.getElementById('confirmAutofillBtn').addEventListener('click', confirmAutofill);
     
     // Avatar upload button
     document.getElementById('avatarUploadBtn').addEventListener('click', function() {
@@ -121,6 +125,7 @@ async function loadTasks() {
 function filterTasks() {
     const categoryFilter = document.getElementById('filterCategory').value;
     const statusFilter = document.getElementById('filterStatus').value;
+    const priorityFilter = document.getElementById('filterPriority').value;
     const searchQuery = document.getElementById('searchTasks').value.toLowerCase();
     
     // Date filters
@@ -143,6 +148,11 @@ function filterTasks() {
     // Apply status filter
     if (statusFilter) {
         filteredTasks = filteredTasks.filter(task => task.status === statusFilter);
+    }
+    
+    // Apply priority filter
+    if (priorityFilter) {
+        filteredTasks = filteredTasks.filter(task => task.priority === priorityFilter);
     }
     
     // Apply created date range filter
@@ -477,6 +487,7 @@ async function deleteTask(taskId) {
 function clearFilters() {
     document.getElementById('filterCategory').value = '';
     document.getElementById('filterStatus').value = '';
+    document.getElementById('filterPriority').value = '';
     document.getElementById('searchTasks').value = '';
     document.getElementById('filterCreatedFrom').value = '';
     document.getElementById('filterCreatedTo').value = '';
@@ -1049,18 +1060,187 @@ async function saveUserProfile() {
     }
 }
 
+// AI Natural Language Parsing and Autofill
+let parsedAutofillData = null;
+let aiAutofillModal;
+
+async function parseNaturalLanguageInput() {
+    const input = document.getElementById('aiNaturalLanguageInput').value.trim();
+    const parseButton = document.getElementById('aiParseButton');
+    
+    if (!input) {
+        showToast('Please enter some text to parse', 'error');
+        return;
+    }
+    
+    try {
+        // Show loading state
+        parseButton.disabled = true;
+        parseButton.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Parsing...';
+        
+        const response = await fetch('/api/parse-natural-language', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ input: input })
+        });
+        
+        const result = await response.json();
+        
+        // Reset button state
+        parseButton.disabled = false;
+        parseButton.innerHTML = '<i class="bi bi-magic me-1"></i>Parse';
+        
+        if (response.ok && result.success) {
+            parsedAutofillData = result.data;
+            showAutofillConfirmation(parsedAutofillData);
+        } else {
+            showToast('Failed to parse input. Please try again.', 'error');
+        }
+    } catch (error) {
+        console.error('Error parsing natural language:', error);
+        showToast('Error parsing input. Please try again.', 'error');
+        
+        // Reset button state
+        parseButton.disabled = false;
+        parseButton.innerHTML = '<i class="bi bi-magic me-1"></i>Parse';
+    }
+}
+
+function showAutofillConfirmation(parsedData) {
+    const content = document.getElementById('aiAutofillContent');
+    
+    let html = '<p>The following forms will be autofilled:</p>';
+    
+    let hasData = false;
+    
+    // New Task section
+    if (parsedData.new_task && Object.keys(parsedData.new_task).length > 0) {
+        hasData = true;
+        html += '<div class="mb-3"><h6>New Task</h6><ul class="list-unstyled">';
+        for (const [key, value] of Object.entries(parsedData.new_task)) {
+            if (value) {
+                html += `<li><strong>${key}:</strong> ${escapeHtml(String(value))}</li>`;
+            }
+        }
+        html += '</ul></div>';
+    }
+    
+    // Filter section
+    if (parsedData.filter && Object.keys(parsedData.filter).length > 0) {
+        hasData = true;
+        html += '<div class="mb-3"><h6>Filter Tasks</h6><ul class="list-unstyled">';
+        for (const [key, value] of Object.entries(parsedData.filter)) {
+            if (value) {
+                html += `<li><strong>${key}:</strong> ${escapeHtml(String(value))}</li>`;
+            }
+        }
+        html += '</ul></div>';
+    }
+    
+    // Sort section
+    if (parsedData.sort && Object.keys(parsedData.sort).length > 0) {
+        hasData = true;
+        html += '<div class="mb-3"><h6>Sort By</h6><ul class="list-unstyled">';
+        for (const [key, value] of Object.entries(parsedData.sort)) {
+            if (value) {
+                html += `<li><strong>${key}:</strong> ${escapeHtml(String(value))}</li>`;
+            }
+        }
+        html += '</ul></div>';
+    }
+    
+    if (!hasData) {
+        html += '<p class="text-muted">No data found to autofill. Please try again with a more specific input.</p>';
+    }
+    
+    content.innerHTML = html;
+    
+    // Show modal
+    if (!aiAutofillModal) {
+        aiAutofillModal = new bootstrap.Modal(document.getElementById('aiAutofillConfirmModal'));
+    }
+    aiAutofillModal.show();
+}
+
+async function confirmAutofill() {
+    if (!parsedAutofillData) return;
+    
+    try {
+        // Apply new task data
+        if (parsedAutofillData.new_task && Object.keys(parsedAutofillData.new_task).length > 0) {
+            const nt = parsedAutofillData.new_task;
+            
+            if (nt.title) document.getElementById('taskTitle').value = nt.title;
+            if (nt.category) document.getElementById('taskCategory').value = nt.category;
+            if (nt.priority) document.getElementById('taskPriority').value = nt.priority;
+            if (nt.due_date) document.getElementById('taskDueDate').value = nt.due_date;
+            if (nt.description) document.getElementById('taskDescription').value = nt.description;
+            
+            // Auto-expand new task form
+            const newTaskCollapse = new bootstrap.Collapse(document.getElementById('newTaskCollapse'));
+            newTaskCollapse.show();
+        }
+        
+        // Apply filter data
+        if (parsedAutofillData.filter && Object.keys(parsedAutofillData.filter).length > 0) {
+            const ft = parsedAutofillData.filter;
+            
+            if (ft.category) document.getElementById('filterCategory').value = ft.category;
+            if (ft.status) document.getElementById('filterStatus').value = ft.status;
+            if (ft.priority) document.getElementById('filterPriority').value = ft.priority;
+            if (ft.search) document.getElementById('searchTasks').value = ft.search;
+            if (ft.created_from) document.getElementById('filterCreatedFrom').value = ft.created_from;
+            if (ft.created_to) document.getElementById('filterCreatedTo').value = ft.created_to;
+            if (ft.due_from) document.getElementById('filterDueFrom').value = ft.due_from;
+            if (ft.due_to) document.getElementById('filterDueTo').value = ft.due_to;
+            
+            // Auto-expand filter form
+            const filterCollapse = new bootstrap.Collapse(document.getElementById('filterCollapse'));
+            filterCollapse.show();
+            
+            // Apply filters
+            filterTasks();
+        }
+        
+        // Apply sort data
+        if (parsedAutofillData.sort && Object.keys(parsedAutofillData.sort).length > 0) {
+            const st = parsedAutofillData.sort;
+            
+            if (st.by) document.getElementById('sortBy').value = st.by;
+            if (st.order) document.getElementById('sortOrder').value = st.order;
+            
+            // Auto-expand sort form
+            const sortCollapse = new bootstrap.Collapse(document.getElementById('sortCollapse'));
+            sortCollapse.show();
+            
+            // Apply sorting
+            filterTasks();
+        }
+        
+        // Hide modal and clear input
+        aiAutofillModal.hide();
+        document.getElementById('aiNaturalLanguageInput').value = '';
+        parsedAutofillData = null;
+        
+        showToast('Forms autofilled successfully!', 'success');
+    } catch (error) {
+        console.error('Error applying autofill:', error);
+        showToast('Error applying autofill. Please try again.', 'error');
+    }
+}
+
 // Initialize profile modal and event listeners
-document.addEventListener('DOMContentLoaded', function() {
-    editProfileModal = new bootstrap.Modal(document.getElementById('editProfileModal'));
-    
-    // Load user profile on page load
-    loadUserProfile();
-    
-    // Event listeners for profile editing
-    document.getElementById('profileAvatarUpload').addEventListener('change', handleAvatarUpload);
-    document.getElementById('detectLocationBtn').addEventListener('click', detectLocation);
-    document.getElementById('saveProfileBtn').addEventListener('click', saveUserProfile);
-    
-    // Populate modal when opened
-    document.getElementById('editProfileModal').addEventListener('show.bs.modal', populateEditProfileModal);
-});
+editProfileModal = new bootstrap.Modal(document.getElementById('editProfileModal'));
+
+// Load user profile on page load
+loadUserProfile();
+
+// Event listeners for profile editing
+document.getElementById('profileAvatarUpload').addEventListener('change', handleAvatarUpload);
+document.getElementById('detectLocationBtn').addEventListener('click', detectLocation);
+document.getElementById('saveProfileBtn').addEventListener('click', saveUserProfile);
+
+// Populate modal when opened
+document.getElementById('editProfileModal').addEventListener('show.bs.modal', populateEditProfileModal);

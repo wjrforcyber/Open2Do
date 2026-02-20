@@ -67,6 +67,24 @@ async def create_task(task_create: TaskCreate):
     return task.model_dump()
 
 
+@app.post("/api/parse-natural-language")
+async def parse_natural_language(request: dict):
+    """Parse natural language input to extract task/filter/sort information."""
+    input_text = request.get("input", "")
+    
+    if not input_text or not input_text.strip():
+        raise HTTPException(status_code=400, detail="Input text is required")
+    
+    try:
+        parsed_data = await ai_scheduler.parse_natural_language_input(input_text)
+        return {
+            "success": True,
+            "data": parsed_data
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to parse natural language: {str(e)}")
+
+
 @app.put("/api/tasks/{task_id}")
 async def update_task(task_id: str, task_update: TaskUpdate):
     """Update a task."""
