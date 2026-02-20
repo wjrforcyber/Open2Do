@@ -189,7 +189,8 @@ A new isolated folder will be created in `data/task_folders/` for each task.
 - **Sort By**: Expand sort options
 
 #### AI Natural Language Autofill
-- **AI Input Box**: Type natural language commands at the top of the Tasks page
+- **AI Input Box**: Type natural language commands or use voice input at the top of the Tasks page
+- **Speech Recognition**: Click the microphone button to speak commands - real-time transcription as you speak
 - **Parse**: Click "Parse" to analyze your input using iFlow CLI
 - **Confirmation Preview**: Review detected form changes before applying
 - **Auto-Expand**: Forms automatically expand when autofilled
@@ -200,6 +201,9 @@ Examples:
 - "Create a high priority work task about meeting tomorrow"
 - "Show me pending tasks from the work category"
 - "Sort tasks by due date"
+
+> [!NOTE]
+> Speech recognition requires microphone access and works best in Chrome or Edge browsers.
 
 #### Filtering Options
 - **Category**: Filter by task category

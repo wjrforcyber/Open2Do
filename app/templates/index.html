@@ -84,7 +84,10 @@
                 <div class="card mb-3">
                     <div class="card-body p-2">
                         <div class="d-flex gap-2">
-                            <input type="text" class="form-control" id="aiNaturalLanguageInput" />
+                            <button class="btn btn-outline-dark btn-sm" onclick="startSpeechRecognition()" id="speechButton" title="Click to speak">
+                                <i class="bi bi-mic me-1"></i>
+                            </button>
+                            <input type="text" class="form-control" id="aiNaturalLanguageInput" placeholder="Type here or click microphone to speak..." />
                             <button class="btn btn-dark btn-sm" onclick="parseNaturalLanguageInput()" id="aiParseButton">
                                 <i class="bi bi-magic me-1"></i>Parse
                             </button>

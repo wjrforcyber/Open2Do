@@ -1231,6 +1231,98 @@ async function confirmAutofill() {
     }
 }
 
+// Speech Recognition
+let recognition = null;
+let isListening = false;
+
+function startSpeechRecognition() {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+        showToast('Speech recognition is not supported in your browser. Please use Chrome or Edge.', 'error');
+        return;
+    }
+    
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    
+    if (isListening) {
+        recognition.stop();
+        return;
+    }
+    
+    recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+    
+    let finalTranscript = '';
+    
+    recognition.onstart = function() {
+        isListening = true;
+        finalTranscript = '';
+        const speechButton = document.getElementById('speechButton');
+        speechButton.classList.remove('btn-outline-dark');
+        speechButton.classList.add('btn-danger');
+        speechButton.innerHTML = '<i class="bi bi-stop-circle me-1"></i>';
+        showToast('Listening... Speak now.', 'info');
+    };
+    
+    recognition.onresult = function(event) {
+        let interimTranscript = '';
+        
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+            if (event.results[i].isFinal) {
+                finalTranscript += event.results[i][0].transcript;
+            } else {
+                interimTranscript += event.results[i][0].transcript;
+            }
+        }
+        
+        // Show interim results in the input field while speaking
+        const displayText = finalTranscript || interimTranscript;
+        if (displayText) {
+            document.getElementById('aiNaturalLanguageInput').value = displayText;
+        }
+        
+        // If we have final transcript, notify user
+        if (finalTranscript) {
+            console.log('Final transcript:', finalTranscript);
+        }
+    };
+    
+    recognition.onerror = function(event) {
+        console.error('Speech recognition error:', event.error);
+        let errorMessage = 'Speech recognition failed.';
+        if (event.error === 'no-speech') {
+            errorMessage = 'No speech detected. Please try again.';
+        } else if (event.error === 'not-allowed') {
+            errorMessage = 'Microphone access denied. Please allow microphone access.';
+        } else if (event.error === 'network') {
+            errorMessage = 'Network error. Please check your connection.';
+        }
+        showToast(errorMessage, 'error');
+        resetSpeechButton();
+    };
+    
+    recognition.onend = function() {
+        resetSpeechButton();
+        
+        // Check if we have a final result to display
+        if (finalTranscript) {
+            document.getElementById('aiNaturalLanguageInput').value = finalTranscript;
+            showToast('Speech recognized! Click Parse to continue.', 'success');
+        }
+    };
+    
+    recognition.start();
+}
+
+function resetSpeechButton() {
+    isListening = false;
+    const speechButton = document.getElementById('speechButton');
+    speechButton.classList.remove('btn-danger');
+    speechButton.classList.add('btn-outline-dark');
+    speechButton.innerHTML = '<i class="bi bi-mic me-1"></i>';
+}
+
 // Initialize profile modal and event listeners
 editProfileModal = new bootstrap.Modal(document.getElementById('editProfileModal'));
 
