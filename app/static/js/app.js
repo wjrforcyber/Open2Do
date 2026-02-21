@@ -3,6 +3,54 @@ let allTasks = [];
 let categories = [];
 let editModal;
 
+// Toast notification function
+function showToast(message, type = 'info') {
+    const toastContainer = document.getElementById('toastContainer');
+    
+    // Create toast element
+    const toastElement = document.createElement('div');
+    toastElement.className = `toast align-items-center text-white bg-${getToastType(type)} border-0`;
+    toastElement.setAttribute('role', 'alert');
+    toastElement.setAttribute('aria-live', 'assertive');
+    toastElement.setAttribute('aria-atomic', 'true');
+    
+    toastElement.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">
+                ${message}
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    `;
+    
+    // Add to container
+    toastContainer.appendChild(toastElement);
+    
+    // Create Bootstrap toast instance
+    const toast = new bootstrap.Toast(toastElement, {
+        delay: 3000,
+        autohide: true
+    });
+    
+    // Show toast
+    toast.show();
+    
+    // Remove element after hide
+    toastElement.addEventListener('hidden.bs.toast', function () {
+        toastElement.remove();
+    });
+}
+
+function getToastType(type) {
+    switch (type) {
+        case 'success': return 'success';
+        case 'error': return 'danger';
+        case 'warning': return 'warning';
+        case 'info': return 'info';
+        default: return 'secondary';
+    }
+}
+
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
     editModal = new bootstrap.Modal(document.getElementById('editTaskModal'));
@@ -1333,6 +1381,138 @@ loadUserProfile();
 document.getElementById('profileAvatarUpload').addEventListener('change', handleAvatarUpload);
 document.getElementById('detectLocationBtn').addEventListener('click', detectLocation);
 document.getElementById('saveProfileBtn').addEventListener('click', saveUserProfile);
+
+// Canvas Assignments Functions
+async function fetchCanvasAssignments() {
+    const listElement = document.getElementById('canvasAssignmentsList');
+    const loadingElement = document.getElementById('canvasAssignmentsLoading');
+    const errorElement = document.getElementById('canvasAssignmentsError');
+    
+    // Show loading, hide error
+    loadingElement.style.display = 'block';
+    errorElement.style.display = 'none';
+    
+    try {
+        const response = await fetch('/api/canvas-assignments');
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.detail || 'Failed to fetch assignments');
+        }
+        
+        displayCanvasAssignments(data.assignments);
+        showToast(`Loaded ${data.total} Canvas assignments`, 'success');
+    } catch (error) {
+        console.error('Error fetching Canvas assignments:', error);
+        showCanvasError(error.message);
+    } finally {
+        loadingElement.style.display = 'none';
+    }
+}
+
+function displayCanvasAssignments(assignments) {
+    const listElement = document.getElementById('canvasAssignmentsList');
+    
+    if (!assignments || assignments.length === 0) {
+        listElement.innerHTML = `
+            <div class="text-center text-muted py-3">
+                <small>No assignments found</small>
+            </div>
+        `;
+        return;
+    }
+    
+    let html = '';
+    
+    assignments.forEach((assignment, index) => {
+        const name = assignment.name || 'Unnamed Assignment';
+        const courseName = assignment._course_name || 'Unknown Course';
+        const points = assignment.points_possible || 0;
+        const dueAt = assignment.due_at;
+        const published = assignment.published;
+        const submission = assignment.submission || {};
+        const submissionState = submission.state || 'not submitted';
+        const score = submission.score;
+        
+        // Format due date
+        let dueDateDisplay = 'No due date';
+        let isOverdue = false;
+        if (dueAt) {
+            const dueDate = new Date(dueAt);
+            const now = new Date();
+            isOverdue = dueDate < now && submissionState !== 'submitted' && submissionState !== 'graded';
+            dueDateDisplay = dueDate.toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+        
+        // Status badge
+        let statusBadge = '';
+        if (submissionState === 'submitted' || submissionState === 'graded') {
+            statusBadge = '<span class="badge bg-success">Submitted</span>';
+        } else if (isOverdue) {
+            statusBadge = '<span class="badge bg-danger">Overdue</span>';
+        } else if (dueAt) {
+            statusBadge = '<span class="badge bg-warning text-dark">Pending</span>';
+        } else {
+            statusBadge = '<span class="badge bg-secondary">No Due Date</span>';
+        }
+        
+        // Score display
+        let scoreDisplay = '';
+        if (score !== null && score !== undefined) {
+            scoreDisplay = `<span class="text-success fw-bold">${score}/${points}</span>`;
+        } else if (points > 0) {
+            scoreDisplay = `<span class="text-muted">${points} pts</span>`;
+        }
+        
+        // Published indicator
+        const publishedIcon = published ? '' : '<i class="bi bi-eye-slash text-muted" title="Unpublished"></i> ';
+        
+        html += `
+            <div class="canvas-assignment-item p-2 mb-2 border rounded ${isOverdue ? 'border-danger' : ''}" style="background: ${isOverdue ? '#fff5f5' : ''}">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                        <small class="text-muted d-block">${publishedIcon}${courseName}</small>
+                        <div class="fw-semibold small mb-1">${name}</div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="${isOverdue ? 'text-danger' : 'text-muted'}">
+                                <i class="bi bi-calendar3 me-1"></i>${dueDateDisplay}
+                            </small>
+                            <div class="d-flex gap-1 align-items-center">
+                                ${statusBadge}
+                                ${scoreDisplay ? `<small class="text-muted ms-1">${scoreDisplay}</small>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    listElement.innerHTML = html;
+}
+
+function showCanvasError(message) {
+    const errorElement = document.getElementById('canvasAssignmentsError');
+    const errorText = document.getElementById('canvasAssignmentsErrorText');
+    const listElement = document.getElementById('canvasAssignmentsList');
+    
+    errorText.textContent = message;
+    errorElement.style.display = 'block';
+    listElement.innerHTML = `
+        <div class="text-center text-muted py-3">
+            <small>Failed to load assignments</small>
+        </div>
+    `;
+}
+
+function hideCanvasError() {
+    document.getElementById('canvasAssignmentsError').style.display = 'none';
+}
 
 // Populate modal when opened
 document.getElementById('editProfileModal').addEventListener('show.bs.modal', populateEditProfileModal);

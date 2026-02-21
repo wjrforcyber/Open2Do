@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 from app.models import Task, TaskCreate, TaskUpdate, TaskStatus, Category, Statistics, UserProfile, UserProfileUpdate
 from app.storage import Storage
 from app.ai_scheduler import AIScheduler
+import requests
 
 # Load environment variables
 load_dotenv()
@@ -331,6 +332,83 @@ async def open_terminal(request: dict):
         return {"success": True}
     except Exception as e:
         return {"success": False, "message": str(e)}
+
+
+@app.get("/api/canvas-assignments")
+async def get_canvas_assignments():
+    """Fetch assignments from Canvas LMS."""
+    try:
+        # Load Canvas credentials from environment
+        canvas_url = os.getenv('CANVAS_URL')
+        access_token = os.getenv('ACCESS_TOKEN')
+        
+        if not canvas_url or not access_token:
+            raise HTTPException(
+                status_code=400, 
+                detail="Canvas credentials not configured. Please set CANVAS_URL and ACCESS_TOKEN in .env file"
+            )
+        
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+            "Accept": "application/json"
+        }
+        
+        # Fetch all courses
+        courses_url = f"{canvas_url}/api/v1/courses"
+        params = {"enrollment_state": "active", "per_page": 100}
+        courses = []
+        
+        # Handle pagination for courses
+        response = requests.get(courses_url, headers=headers, params=params)
+        response.raise_for_status()
+        courses.extend(response.json())
+        
+        # Fetch assignments for each course
+        all_assignments = []
+        for course in courses:
+            course_id = course.get('id')
+            course_name = course.get('name', 'Unknown Course')
+            
+            assignments_url = f"{canvas_url}/api/v1/courses/{course_id}/assignments"
+            params = {"include": ["submission"], "per_page": 100}
+            
+            # Handle pagination for assignments
+            response = requests.get(assignments_url, headers=headers, params=params)
+            response.raise_for_status()
+            assignments = response.json()
+            
+            # Add course info to each assignment
+            for assignment in assignments:
+                assignment['_course_name'] = course_name
+                assignment['_course_id'] = course_id
+            
+            all_assignments.extend(assignments)
+        
+        # Sort assignments by due date (null dates go last)
+        def sort_key(assignment):
+            due_at = assignment.get('due_at')
+            if due_at:
+                return (0, due_at)  # Valid due dates come first
+            return (1, '')  # Assignments without due dates come last
+        
+        all_assignments.sort(key=sort_key)
+        
+        return {
+            "success": True,
+            "total": len(all_assignments),
+            "assignments": all_assignments
+        }
+        
+    except requests.exceptions.HTTPError as e:
+        raise HTTPException(
+            status_code=e.response.status_code if e.response else 500,
+            detail=f"Canvas API error: {e.response.text if e.response else str(e)}"
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to fetch Canvas assignments: {str(e)}"
+        )
 
 
 if __name__ == "__main__":

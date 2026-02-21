@@ -31,6 +31,7 @@
 ### 高级功能
 - **AI 驱动的执行**：使用 iFlow CLI 执行任务，具有 AI 权限检查
 - **AI 自然语言自动填充**：解析自然语言输入以自动填充表单（新建任务、筛选任务、排序方式），并提供确认预览
+- **Canvas LMS 集成**：从 Canvas LMS 获取并显示作业，实时更新
 
 > [!CAUTION]
 > 虽然我设置了权限检查，但访问系统文件等操作是危险的，请自行承担风险。
@@ -85,6 +86,13 @@ source venv/bin/activate  # Windows 上：venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
+这将安装：
+- FastAPI 和 Uvicorn 用于 Web 服务器
+- Jinja2 用于 HTML 模板
+- Pydantic 用于数据验证
+- python-dotenv 用于环境变量管理
+- requests 用于 Canvas LMS API 集成
+
 ### 4. 配置环境变量（可选）
 
 复制示例环境文件：
@@ -97,6 +105,8 @@ cp .env.example .env
 
 - `DATA_DIR` - 存储任务数据的目录（默认：`./data`）
 - `IFLOW_COMMAND` - 运行 iFlow 的命令（默认：`iflow`）
+- `CANVAS_URL` - 您的 Canvas LMS 实例 URL（用于 Canvas 作业小部件）
+- `ACCESS_TOKEN` - Canvas API 访问令牌（用于 Canvas 作业小部件）
 
 ## 启动应用
 
@@ -311,12 +321,49 @@ source venv/bin/activate
 - 仪表板每 10 秒自动刷新一次
 - 手动点击"刷新仪表板"按钮强制更新
 
+### Canvas 作业未加载
+- 验证 Canvas URL 和访问令牌已在 `.env` 中配置
+- 从 Canvas 获取访问令牌：账户 > 设置 > 已批准的集成
+- 确保令牌具有适当的权限（读取课程内容）
+- 检查浏览器控制台是否有错误消息
+
+## Canvas LMS 集成
+
+### 设置
+要使用 Canvas 作业小部件：
+
+1. 登录到您的 Canvas LMS 实例
+2. 转到 **账户** > **设置** > **已批准的集成**
+3. 点击 **+ 新访问令牌**
+4. 输入用途（例如："Open2Do 作业"）
+5. 复制生成的令牌
+6. 添加到 `.env`：
+   ```
+   CANVAS_URL=https://your-canvas-instance.com
+   ACCESS_TOKEN=your-access-token-here
+   ```
+
+### 使用 Canvas 作业
+- Canvas 作业小部件显示在左侧边栏的个人资料下方
+- 点击刷新按钮从所有活动课程获取所有作业
+- 列表可滚动，具有最大高度以显示多个作业
+- 作业按截止日期排序（没有截止日期的作业显示在最后）
+- 逾期作业以红色背景高亮显示
+- 每个作业显示：
+  - 课程名称
+  - 作业标题
+  - 截止日期（本地格式）
+  - 提交状态徽章（已提交、待办、逾期、无截止日期）
+  - 可能的分数和当前得分（如果已评分）
+- 已发布/未发布的作业指示器
+- Toast 通知显示加载状态和结果
+
 ## 项目结构
 
 ```
 Open2Do/
 ├── app/
-│   ├── main.py              # FastAPI 应用和 API 端点
+│   ├── main.py              # FastAPI 应用和 API 端点（包括 Canvas LMS 集成）
 │   ├── models.py            # Pydantic 数据模型
 │   ├── storage.py           # JSON 存储处理器，支持用户配置文件
 │   ├── ai_scheduler.py      # iFlow CLI 集成用于 AI 操作
@@ -324,11 +371,11 @@ Open2Do/
 │   │   ├── css/
 │   │   │   └── styles.css   # 自定义深色主题样式
 │   │   ├── js/
-│   │   │   ├── app.js       # 主页面 JavaScript
+│   │   │   ├── app.js       # 主页面 JavaScript（包括 Canvas 作业小部件）
 │   │   │   └── dashboard.js # 带有 Chart.js 的仪表板 JavaScript
 │   │   └── o2dologo.png     # 应用图标
 │   └── templates/
-│       ├── index.html       # 带有可折叠部分的任务页面
+│       ├── index.html       # 带有可折叠部分的任务页面（包括 Canvas 小部件）
 │       └── dashboard.html   # 统计仪表板
 ├── data/                    # 用户数据目录
 │   ├── tasks.json           # 任务存储

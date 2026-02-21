@@ -373,3 +373,53 @@ body {
         font-size: 1rem;
     }
 }
+
+/* Canvas Assignments Widget */
+.canvas-assignments {
+    border-radius: 15px;
+}
+
+.canvas-assignments .card-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.canvas-assignments-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.canvas-assignment-item {
+    background: #fff;
+    transition: all 0.2s;
+    font-size: 0.85rem;
+}
+
+.canvas-assignment-item:hover {
+    background: #f8f9fa;
+    transform: translateX(3px);
+}
+
+.canvas-assignment-item .badge {
+    font-size: 0.65rem;
+    padding: 0.2rem 0.4rem;
+}
+
+/* Custom scrollbar for Canvas assignments */
+.canvas-assignments-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.canvas-assignments-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.canvas-assignments-list::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 3px;
+}
+
+.canvas-assignments-list::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}

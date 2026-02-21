@@ -31,6 +31,7 @@ A modern, feature-rich local web-based TODO application with AI-powered task exe
 ### Advanced Features
 - **AI-Powered Execution**: Execute tasks using iFlow CLI with AI permission checking
 - **AI Natural Language Autofill**: Parse natural language input to automatically fill forms (New Task, Filter Tasks, Sort By) with confirmation preview
+- **Canvas LMS Integration**: Fetch and display assignments from Canvas LMS with real-time updates
 
 > [!CAUTION]
 > Although I have set permission checking, action such as accessing system files are dangerous, use at your own risk.
@@ -85,6 +86,13 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
+This will install:
+- FastAPI and Uvicorn for the web server
+- Jinja2 for HTML templating
+- Pydantic for data validation
+- python-dotenv for environment variable management
+- requests for Canvas LMS API integration
+
 ### 4. Configure Environment Variables (Optional)
 
 Copy the example environment file:
@@ -97,6 +105,8 @@ Edit `.env` to configure:
 
 - `DATA_DIR` - Directory where task data will be stored (default: `./data`)
 - `IFLOW_COMMAND` - Command to run iFlow (default: `iflow`)
+- `CANVAS_URL` - Your Canvas LMS instance URL (for Canvas Assignments widget)
+- `ACCESS_TOKEN` - Canvas API access token (for Canvas Assignments widget)
 
 ## Launching the Application
 
@@ -311,12 +321,49 @@ source venv/bin/activate
 - The dashboard auto-refreshes every 10 seconds
 - Manually click the "Refresh Dashboard" button to force an update
 
+### Canvas Assignments Not Loading
+- Verify Canvas URL and access token are configured in `.env`
+- Get your access token from Canvas: Account > Settings > Approved Integrations
+- Ensure the token has appropriate permissions (read course content)
+- Check browser console for error messages
+
+## Canvas LMS Integration
+
+### Setup
+To use the Canvas Assignments widget:
+
+1. Log in to your Canvas LMS instance
+2. Go to **Account** > **Settings** > **Approved Integrations**
+3. Click **+ New Access Token**
+4. Enter a purpose (e.g., "Open2Do Assignments")
+5. Copy the generated token
+6. Add to `.env`:
+   ```
+   CANVAS_URL=https://your-canvas-instance.com
+   ACCESS_TOKEN=your-access-token-here
+   ```
+
+### Using Canvas Assignments
+- The Canvas Assignments widget appears in the left sidebar under your profile
+- Click the refresh button to fetch all assignments from all active courses
+- The list is scrollable with a maximum height to display multiple assignments
+- Assignments are sorted by due date (assignments without due dates appear last)
+- Overdue assignments are highlighted in red background
+- Each assignment shows:
+  - Course name
+  - Assignment title
+  - Due date (with local formatting)
+  - Submission status badge (Submitted, Pending, Overdue, No Due Date)
+  - Points possible and current score (if graded)
+- Published/unpublished indicator for assignments
+- Toast notifications show loading status and results
+
 ## Project Structure
 
 ```
 Open2Do/
 ├── app/
-│   ├── main.py              # FastAPI application and API endpoints
+│   ├── main.py              # FastAPI application and API endpoints (includes Canvas LMS integration)
 │   ├── models.py            # Pydantic data models
 │   ├── storage.py           # JSON storage handler with user profile support
 │   ├── ai_scheduler.py      # iFlow CLI integration for AI operations
@@ -324,11 +371,11 @@ Open2Do/
 │   │   ├── css/
 │   │   │   └── styles.css   # Custom styling with dark theme
 │   │   ├── js/
-│   │   │   ├── app.js       # Main page JavaScript
+│   │   │   ├── app.js       # Main page JavaScript (includes Canvas assignments widget)
 │   │   │   └── dashboard.js # Dashboard JavaScript with Chart.js
 │   │   └── o2dologo.png     # Application logo
 │   └── templates/
-│       ├── index.html       # Tasks page with collapsible sections
+│       ├── index.html       # Tasks page with collapsible sections (includes Canvas widget)
 │       └── dashboard.html   # Statistics dashboard
 ├── data/                    # User data directory
 │   ├── tasks.json           # Task storage
