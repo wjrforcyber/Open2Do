@@ -120,9 +120,27 @@ function setupEventListeners() {
     document.getElementById('avatarUploadBtn').addEventListener('click', function() {
         document.getElementById('avatarInput').click();
     });
+}
+
+// Populate modal when opened
+document.getElementById('editProfileModal').addEventListener('show.bs.modal', populateEditProfileModal);
+
+// Toggle sidebar visibility
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebarColumn');
+    const mainContent = document.getElementById('mainContentColumn');
     
-    // Avatar input change
-    document.getElementById('avatarInput').addEventListener('change', handleAvatarUpload);
+    if (sidebar.classList.contains('collapsed')) {
+        // Show sidebar
+        sidebar.classList.remove('collapsed');
+        mainContent.classList.remove('col-md-12');
+        mainContent.classList.add('col-md-9', 'col-lg-10');
+    } else {
+        // Hide sidebar
+        sidebar.classList.add('collapsed');
+        mainContent.classList.remove('col-md-9', 'col-lg-10');
+        mainContent.classList.add('col-md-12');
+    }
 }
 
 // Load categories from server
