@@ -1,5 +1,7 @@
 # Open2Do
 
+[![Pylint](https://github.com/wjrforcyber/Open2Do/workflows/Pylint/badge.svg)](https://github.com/wjrforcyber/Open2Do/actions)
+
 A modern, feature-rich local web-based TODO application with AI-powered task execution and management.
 
 [中文文档](README_CN.md)
