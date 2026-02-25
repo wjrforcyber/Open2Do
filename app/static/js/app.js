@@ -160,19 +160,98 @@ async function loadCategories() {
 function updateCategorySelects() {
     const categoryList = document.getElementById('categoryList');
     const editCategoryList = document.getElementById('editCategoryList');
-    const filterCategory = document.getElementById('filterCategory');
     
     // Clear existing options
     categoryList.innerHTML = '';
     editCategoryList.innerHTML = '';
-    filterCategory.innerHTML = '<option value="">All Categories</option>';
     
     // Add categories
     categories.forEach(cat => {
         categoryList.innerHTML += `<option value="${cat.name}">`;
         editCategoryList.innerHTML += `<option value="${cat.name}">`;
-        filterCategory.innerHTML += `<option value="${cat.name}">${cat.name}</option>`;
     });
+    
+    // Update category dropdown for multi-select
+    updateCategoryDropdown();
+}
+
+// Update category dropdown with checkboxes
+function updateCategoryDropdown() {
+    const dropdownMenu = document.getElementById('categoryDropdownMenu');
+    
+    // Keep the first 3 items (Select All, Clear All, divider)
+    const existingItems = dropdownMenu.querySelectorAll('li');
+    for (let i = existingItems.length - 1; i >= 3; i--) {
+        existingItems[i].remove();
+    }
+    
+    // Add categories as checkboxes
+    categories.forEach(cat => {
+        const li = document.createElement('li');
+        li.innerHTML = `
+            <div class="dropdown-item" onclick="event.stopPropagation();">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="${cat.name}" id="cat-${cat.name}" onchange="toggleCategory('${cat.name}')">
+                    <label class="form-check-label" for="cat-${cat.name}">
+                        ${cat.name}
+                    </label>
+                </div>
+            </div>
+        `;
+        dropdownMenu.appendChild(li);
+    });
+}
+
+// Toggle category selection
+function toggleCategory(categoryName) {
+    updateSelectedCategoriesDisplay();
+    filterTasks();
+}
+
+// Get selected categories
+function getSelectedCategories() {
+    const checkboxes = document.querySelectorAll('#categoryDropdownMenu input[type="checkbox"]:checked');
+    return Array.from(checkboxes).map(cb => cb.value);
+}
+
+// Toggle all categories
+function toggleAllCategories(selectAll) {
+    const checkboxes = document.querySelectorAll('#categoryDropdownMenu input[type="checkbox"]');
+    checkboxes.forEach(cb => {
+        cb.checked = selectAll;
+    });
+    updateSelectedCategoriesDisplay();
+    filterTasks();
+}
+
+// Update selected categories display
+function updateSelectedCategoriesDisplay() {
+    const selectedCategories = getSelectedCategories();
+    const displayDiv = document.getElementById('selectedCategories');
+    const dropdownButton = document.querySelector('#categoryDropdown span');
+    
+    if (selectedCategories.length === 0) {
+        displayDiv.innerHTML = '';
+        dropdownButton.textContent = 'Select Categories';
+    } else {
+        dropdownButton.textContent = `${selectedCategories.length} Selected`;
+        displayDiv.innerHTML = selectedCategories.map(cat => `
+            <span class="badge bg-dark">
+                ${cat}
+                <i class="bi bi-x ms-1" style="cursor: pointer;" onclick="removeCategory('${cat}')"></i>
+            </span>
+        `).join('');
+    }
+}
+
+// Remove a category from selection
+function removeCategory(categoryName) {
+    const checkbox = document.getElementById(`cat-${categoryName}`);
+    if (checkbox) {
+        checkbox.checked = false;
+        updateSelectedCategoriesDisplay();
+        filterTasks();
+    }
 }
 
 // Load tasks from server
@@ -190,7 +269,7 @@ async function loadTasks() {
 
 // Filter and display tasks
 function filterTasks() {
-    const categoryFilter = document.getElementById('filterCategory').value;
+    const selectedCategories = getSelectedCategories();
     const statusFilter = document.getElementById('filterStatus').value;
     const priorityFilter = document.getElementById('filterPriority').value;
     const searchQuery = document.getElementById('searchTasks').value.toLowerCase();
@@ -207,9 +286,9 @@ function filterTasks() {
     
     let filteredTasks = allTasks;
     
-    // Apply category filter
-    if (categoryFilter) {
-        filteredTasks = filteredTasks.filter(task => task.category === categoryFilter);
+    // Apply category filter (multiple categories)
+    if (selectedCategories.length > 0) {
+        filteredTasks = filteredTasks.filter(task => selectedCategories.includes(task.category));
     }
     
     // Apply status filter
@@ -552,7 +631,7 @@ async function deleteTask(taskId) {
 
 // Clear filters
 function clearFilters() {
-    document.getElementById('filterCategory').value = '';
+    toggleAllCategories(false);
     document.getElementById('filterStatus').value = '';
     document.getElementById('filterPriority').value = '';
     document.getElementById('searchTasks').value = '';

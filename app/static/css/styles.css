@@ -16,6 +16,32 @@ html {
     overflow-x: hidden;
 }
 
+/* Category Multi-Select Dropdown */
+#categoryDropdownMenu .dropdown-item {
+    padding: 0.25rem 0.5rem;
+}
+
+#categoryDropdownMenu .dropdown-item .form-check {
+    margin: 0;
+}
+
+#categoryDropdownMenu .dropdown-item:hover {
+    background-color: transparent;
+}
+
+#categoryDropdownMenu .form-check-input:checked {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+#selectedCategories .badge {
+    cursor: default;
+}
+
+#selectedCategories .badge i:hover {
+    color: #ff6b6b;
+}
+
 .navbar-brand {
     font-weight: 600;
     font-size: 1.5rem;
