@@ -642,6 +642,17 @@ function clearFilters() {
     filterTasks();
 }
 
+// Collapse all collapsible sections
+function collapseAllSections() {
+    const newTaskCollapse = new bootstrap.Collapse(document.getElementById('newTaskCollapse'), { toggle: false });
+    const filterCollapse = new bootstrap.Collapse(document.getElementById('filterCollapse'), { toggle: false });
+    const sortCollapse = new bootstrap.Collapse(document.getElementById('sortCollapse'), { toggle: false });
+    
+    newTaskCollapse.hide();
+    filterCollapse.hide();
+    sortCollapse.hide();
+}
+
 // Update bulk actions bar
 function updateBulkActions() {
     const checkboxes = document.querySelectorAll('.task-checkbox:checked');

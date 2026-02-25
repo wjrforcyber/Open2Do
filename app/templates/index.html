@@ -135,15 +135,20 @@
                 <!-- Quick Actions Bar -->
                 <div class="card mb-3">
                     <div class="card-body p-2">
-                        <div class="d-flex gap-2">
-                            <button class="btn btn-dark btn-sm" data-bs-toggle="collapse" data-bs-target="#newTaskCollapse" aria-expanded="false">
-                                <i class="bi bi-plus-circle me-1"></i>New Task
-                            </button>
-                            <button class="btn btn-dark btn-sm" data-bs-toggle="collapse" data-bs-target="#filterCollapse" aria-expanded="false">
-                                <i class="bi bi-funnel me-1"></i>Filter Tasks
-                            </button>
-                            <button class="btn btn-dark btn-sm" data-bs-toggle="collapse" data-bs-target="#sortCollapse" aria-expanded="false">
-                                <i class="bi bi-sort-down me-1"></i>Sort By
+                        <div class="d-flex gap-2 justify-content-between">
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-dark btn-sm" data-bs-toggle="collapse" data-bs-target="#newTaskCollapse" aria-expanded="false">
+                                    <i class="bi bi-plus-circle me-1"></i>New Task
+                                </button>
+                                <button class="btn btn-dark btn-sm" data-bs-toggle="collapse" data-bs-target="#filterCollapse" aria-expanded="false">
+                                    <i class="bi bi-funnel me-1"></i>Filter Tasks
+                                </button>
+                                <button class="btn btn-dark btn-sm" data-bs-toggle="collapse" data-bs-target="#sortCollapse" aria-expanded="false">
+                                    <i class="bi bi-sort-down me-1"></i>Sort By
+                                </button>
+                            </div>
+                            <button class="btn btn-outline-dark btn-sm" onclick="collapseAllSections()">
+                                <i class="bi bi-chevron-up me-1"></i>Collapse All
                             </button>
                         </div>
                     </div>
@@ -440,6 +445,6 @@
     <div class="toast-container position-fixed bottom-0 end-0 p-3" id="toastContainer"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="/static/js/app.js?v=4"></script>
+    <script src="/static/js/app.js?v=5"></script>
 </body>
 </html>
