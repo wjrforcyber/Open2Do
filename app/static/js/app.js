@@ -56,6 +56,7 @@ document.addEventListener('DOMContentLoaded', function() {
     editModal = new bootstrap.Modal(document.getElementById('editTaskModal'));
     loadCategories();
     loadTasks();
+    loadCanvasAssignmentsFromStorage();
     setupEventListeners();
 });
 
@@ -1401,6 +1402,30 @@ document.getElementById('detectLocationBtn').addEventListener('click', detectLoc
 document.getElementById('saveProfileBtn').addEventListener('click', saveUserProfile);
 
 // Canvas Assignments Functions
+function loadCanvasAssignmentsFromStorage() {
+    const storedAssignments = localStorage.getItem('canvasAssignments');
+    
+    if (storedAssignments) {
+        try {
+            const assignments = JSON.parse(storedAssignments);
+            if (assignments && assignments.length > 0) {
+                displayCanvasAssignments(assignments);
+            }
+        } catch (error) {
+            console.error('Error loading Canvas assignments from storage:', error);
+        }
+    }
+}
+
+function saveCanvasAssignmentsToStorage(assignments) {
+    try {
+        localStorage.setItem('canvasAssignments', JSON.stringify(assignments));
+        localStorage.setItem('canvasAssignmentsTimestamp', new Date().toISOString());
+    } catch (error) {
+        console.error('Error saving Canvas assignments to storage:', error);
+    }
+}
+
 async function fetchCanvasAssignments() {
     const listElement = document.getElementById('canvasAssignmentsList');
     const loadingElement = document.getElementById('canvasAssignmentsLoading');
@@ -1419,6 +1444,7 @@ async function fetchCanvasAssignments() {
         }
         
         displayCanvasAssignments(data.assignments);
+        saveCanvasAssignmentsToStorage(data.assignments);
         showToast(`Loaded ${data.total} Canvas assignments`, 'success');
     } catch (error) {
         console.error('Error fetching Canvas assignments:', error);
