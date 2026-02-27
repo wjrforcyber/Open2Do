@@ -53,11 +53,29 @@ function getToastType(type) {
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('=== DOMContentLoaded START ===');
     editModal = new bootstrap.Modal(document.getElementById('editTaskModal'));
-    loadCategories();
-    loadTasks();
+    
+    // Load categories first, then load filter state, then create dropdown with selections, then load tasks
+    loadCategories().then(() => {
+        console.log('Categories loaded');
+        // Update task form datalists
+        updateCategorySelects();
+        return loadFilterState();
+    }).then((filterData) => {
+        console.log('Filter state loaded, creating dropdown with selections:', filterData.categories);
+        // Recreate category dropdown with saved selections
+        updateCategoryDropdown(filterData.categories);
+        console.log('Dropdown updated, now loading tasks');
+        return loadTasks();
+    }).then(() => {
+        console.log('Tasks loaded, applying filters');
+        filterTasks();
+    });
+    
     loadCanvasAssignmentsFromStorage();
     setupEventListeners();
+    console.log('=== DOMContentLoaded END ===');
 });
 
 // Setup event listeners
@@ -150,7 +168,7 @@ async function loadCategories() {
         const response = await fetch('/api/categories');
         const data = await response.json();
         categories = data.categories;
-        updateCategorySelects();
+        // Don't call updateCategorySelects() here - it will be called after filter state is loaded
     } catch (error) {
         console.error('Error loading categories:', error);
     }
@@ -170,14 +188,16 @@ function updateCategorySelects() {
         categoryList.innerHTML += `<option value="${cat.name}">`;
         editCategoryList.innerHTML += `<option value="${cat.name}">`;
     });
-    
-    // Update category dropdown for multi-select
-    updateCategoryDropdown();
 }
 
 // Update category dropdown with checkboxes
-function updateCategoryDropdown() {
+function updateCategoryDropdown(selectedCategories = []) {
     const dropdownMenu = document.getElementById('categoryDropdownMenu');
+    console.log('updateCategoryDropdown called with:', selectedCategories);
+    
+    // Save current selected categories before clearing
+    const currentSelectedCategories = getSelectedCategories();
+    console.log('Current selected categories:', currentSelectedCategories);
     
     // Keep the first 3 items (Select All, Clear All, divider)
     const existingItems = dropdownMenu.querySelectorAll('li');
@@ -200,6 +220,30 @@ function updateCategoryDropdown() {
         `;
         dropdownMenu.appendChild(li);
     });
+    
+    console.log(`Created ${categories.length} category checkboxes`);
+    
+    // Use the provided selected categories, or restore current selections
+    const categoriesToCheck = selectedCategories.length > 0 ? selectedCategories : currentSelectedCategories;
+    console.log('Categories to check:', categoriesToCheck);
+    
+    if (categoriesToCheck.length > 0) {
+        console.log(`Checking ${categoriesToCheck.length} categories:`, categoriesToCheck);
+        categoriesToCheck.forEach(catName => {
+            const checkbox = document.getElementById(`cat-${catName}`);
+            if (checkbox) {
+                checkbox.checked = true;
+                console.log(`Checked checkbox for: ${catName}`);
+            } else {
+                console.warn(`Checkbox not found for category: ${catName}`);
+            }
+        });
+        updateSelectedCategoriesDisplay();
+    }
+    
+    // Log final state
+    const finalSelected = getSelectedCategories();
+    console.log('Final selected categories after update:', finalSelected);
 }
 
 // Toggle category selection
@@ -211,7 +255,9 @@ function toggleCategory(categoryName) {
 // Get selected categories
 function getSelectedCategories() {
     const checkboxes = document.querySelectorAll('#categoryDropdownMenu input[type="checkbox"]:checked');
-    return Array.from(checkboxes).map(cb => cb.value);
+    const selected = Array.from(checkboxes).map(cb => cb.value);
+    console.log(`getSelectedCategories: found ${selected.length} checked checkboxes:`, selected);
+    return selected;
 }
 
 // Toggle all categories
@@ -269,10 +315,18 @@ async function loadTasks() {
 
 // Filter and display tasks
 function filterTasks() {
+    console.log('=== filterTasks START ===');
     const selectedCategories = getSelectedCategories();
     const statusFilter = document.getElementById('filterStatus').value;
     const priorityFilter = document.getElementById('filterPriority').value;
     const searchQuery = document.getElementById('searchTasks').value.toLowerCase();
+    
+    console.log('Filter inputs:', {
+        selectedCategories,
+        statusFilter,
+        priorityFilter,
+        searchQuery
+    });
     
     // Date filters
     const createdFrom = document.getElementById('filterCreatedFrom').value;
@@ -284,6 +338,7 @@ function filterTasks() {
     const sortBy = document.getElementById('sortBy').value;
     const sortOrder = document.getElementById('sortOrder').value;
     
+    console.log(`Starting with ${allTasks.length} tasks`);
     let filteredTasks = allTasks;
     
     // Apply category filter (multiple categories)
@@ -353,6 +408,11 @@ function filterTasks() {
     }
     
     displayTasks(filteredTasks, sortBy === 'custom');
+    
+    console.log('filterTasks completed, displaying', filteredTasks.length, 'tasks out of', allTasks.length, 'total');
+    
+    // Save filter state
+    saveFilterState();
 }
 
 // Sort tasks
@@ -403,6 +463,8 @@ function sortTasks(tasks, sortBy, sortOrder) {
 // Display tasks in the list
 function displayTasks(tasks, enableDrag = false) {
     const tasksList = document.getElementById('tasksList');
+    
+    console.log('displayTasks called with', tasks.length, 'tasks, enableDrag:', enableDrag);
     
     if (tasks.length === 0) {
         tasksList.innerHTML = `
@@ -639,6 +701,10 @@ function clearFilters() {
     document.getElementById('filterCreatedTo').value = '';
     document.getElementById('filterDueFrom').value = '';
     document.getElementById('filterDueTo').value = '';
+    
+    // Clear saved filter state
+    localStorage.removeItem('taskFilterState');
+    
     filterTasks();
 }
 
@@ -1653,6 +1719,87 @@ function showCanvasError(message) {
 
 function hideCanvasError() {
     document.getElementById('canvasAssignmentsError').style.display = 'none';
+}
+
+// Filter state persistence
+function saveFilterState() {
+    const filterState = {
+        selectedCategories: getSelectedCategories(),
+        status: document.getElementById('filterStatus').value,
+        priority: document.getElementById('filterPriority').value,
+        search: document.getElementById('searchTasks').value,
+        createdFrom: document.getElementById('filterCreatedFrom').value,
+        createdTo: document.getElementById('filterCreatedTo').value,
+        dueFrom: document.getElementById('filterDueFrom').value,
+        dueTo: document.getElementById('filterDueTo').value,
+        sortBy: document.getElementById('sortBy').value,
+        sortOrder: document.getElementById('sortOrder').value
+    };
+    localStorage.setItem('taskFilterState', JSON.stringify(filterState));
+    console.log('Filter state saved:', filterState);
+}
+
+async function loadFilterState() {
+    console.log('=== loadFilterState START ===');
+    const savedState = localStorage.getItem('taskFilterState');
+    console.log('Saved state from localStorage:', savedState);
+    
+    if (!savedState) {
+        console.log('No saved filter state found');
+        return { categories: [] };
+    }
+    
+    try {
+        const filterState = JSON.parse(savedState);
+        console.log('Loading filter state:', filterState);
+        console.log('Selected categories in saved state:', filterState.selectedCategories);
+        
+        // Restore status filter
+        if (filterState.status) {
+            document.getElementById('filterStatus').value = filterState.status;
+        }
+        
+        // Restore priority filter
+        if (filterState.priority) {
+            document.getElementById('filterPriority').value = filterState.priority;
+        }
+        
+        // Restore search
+        if (filterState.search) {
+            document.getElementById('searchTasks').value = filterState.search;
+        }
+        
+        // Restore date filters
+        if (filterState.createdFrom) {
+            document.getElementById('filterCreatedFrom').value = filterState.createdFrom;
+        }
+        if (filterState.createdTo) {
+            document.getElementById('filterCreatedTo').value = filterState.createdTo;
+        }
+        if (filterState.dueFrom) {
+            document.getElementById('filterDueFrom').value = filterState.dueFrom;
+        }
+        if (filterState.dueTo) {
+            document.getElementById('filterDueTo').value = filterState.dueTo;
+        }
+        
+        // Restore sort options
+        if (filterState.sortBy) {
+            document.getElementById('sortBy').value = filterState.sortBy;
+        }
+        if (filterState.sortOrder) {
+            document.getElementById('sortOrder').value = filterState.sortOrder;
+        }
+        
+        // Return selected categories to be used in updateCategoryDropdown
+        const selectedCategories = filterState.selectedCategories || [];
+        console.log(`Returning ${selectedCategories.length} selected categories`);
+        return { categories: selectedCategories };
+    } catch (error) {
+        console.error('Error loading filter state:', error);
+        return { categories: [] };
+    }
+    console.log('=== loadFilterState END ===');
 }
 
 // Populate modal when opened
