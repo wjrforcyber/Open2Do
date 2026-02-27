@@ -1567,6 +1567,7 @@ function displayCanvasAssignments(assignments) {
         const submission = assignment.submission || {};
         const submissionState = submission.state || 'not submitted';
         const score = submission.score;
+        const htmlUrl = assignment.html_url;
         
         // Format due date
         let dueDateDisplay = 'No due date';
@@ -1606,12 +1607,18 @@ function displayCanvasAssignments(assignments) {
         // Published indicator
         const publishedIcon = published ? '' : '<i class="bi bi-eye-slash text-muted" title="Unpublished"></i> ';
         
+        // Assignment name with link if available
+        let nameDisplay = name;
+        if (htmlUrl) {
+            nameDisplay = `<a href="${htmlUrl}" target="_blank" class="text-decoration-none" title="Open in Canvas">${name} <i class="bi bi-box-arrow-up-right small"></i></a>`;
+        }
+        
         html += `
             <div class="canvas-assignment-item p-2 mb-2 border rounded ${isOverdue ? 'border-danger' : ''}" style="background: ${isOverdue ? '#fff5f5' : ''}">
                 <div class="d-flex justify-content-between align-items-start">
                     <div class="flex-grow-1">
                         <small class="text-muted d-block">${publishedIcon}${courseName}</small>
-                        <div class="fw-semibold small mb-1">${name}</div>
+                        <div class="fw-semibold small mb-1">${nameDisplay}</div>
                         <div class="d-flex justify-content-between align-items-center">
                             <small class="${isOverdue ? 'text-danger' : 'text-muted'}">
                                 <i class="bi bi-calendar3 me-1"></i>${dueDateDisplay}

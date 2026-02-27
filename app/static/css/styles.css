@@ -436,6 +436,16 @@ html {
     padding: 0.2rem 0.4rem;
 }
 
+.canvas-assignment-item a {
+    color: var(--primary-color);
+    transition: all 0.2s;
+}
+
+.canvas-assignment-item a:hover {
+    color: #0d6efd;
+    text-decoration: underline;
+}
+
 /* Custom scrollbar for Canvas assignments */
 .canvas-assignments-list::-webkit-scrollbar {
     width: 6px;
