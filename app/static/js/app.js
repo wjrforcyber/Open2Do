@@ -80,6 +80,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Setup event listeners
 function setupEventListeners() {
+    console.log('=== setupEventListeners START ===');
+    
     // Task form submission
     document.getElementById('taskForm').addEventListener('submit', handleCreateTask);
     
@@ -87,7 +89,7 @@ function setupEventListeners() {
     document.getElementById('saveTaskBtn').addEventListener('click', handleUpdateTask);
     
     // Filter changes
-    document.getElementById('filterCategory').addEventListener('change', filterTasks);
+    // Note: filterCategory doesn't exist anymore (replaced with dropdown), skipping this
     document.getElementById('filterStatus').addEventListener('change', filterTasks);
     document.getElementById('filterPriority').addEventListener('change', filterTasks);
     document.getElementById('filterCreatedFrom').addEventListener('change', filterTasks);
@@ -121,7 +123,13 @@ function setupEventListeners() {
     });
     
     // Clear filters
-    document.getElementById('clearFilters').addEventListener('click', clearFilters);
+    const clearFiltersBtn = document.getElementById('clearFilters');
+    if (clearFiltersBtn) {
+        console.log('Attaching clearFilters event listener');
+        clearFiltersBtn.addEventListener('click', clearFilters);
+    } else {
+        console.error('clearFilters button not found!');
+    }
     
     // Edit profile button
     document.getElementById('editProfileBtn').addEventListener('click', loadUserProfile);
@@ -693,7 +701,23 @@ async function deleteTask(taskId) {
 
 // Clear filters
 function clearFilters() {
-    toggleAllCategories(false);
+    console.log('=== clearFilters START ===');
+    
+    // Clear all category checkboxes
+    const checkboxes = document.querySelectorAll('#categoryDropdownMenu input[type="checkbox"]');
+    console.log(`Found ${checkboxes.length} checkboxes to clear`);
+    
+    if (checkboxes.length === 0) {
+        console.warn('No category checkboxes found - dropdown may not be rendered yet');
+    }
+    
+    checkboxes.forEach(cb => {
+        console.log(`Clearing checkbox for category: ${cb.value}`);
+        cb.checked = false;
+    });
+    
+    updateSelectedCategoriesDisplay();
+    
     document.getElementById('filterStatus').value = '';
     document.getElementById('filterPriority').value = '';
     document.getElementById('searchTasks').value = '';
@@ -704,8 +728,17 @@ function clearFilters() {
     
     // Clear saved filter state
     localStorage.removeItem('taskFilterState');
+    console.log('Cleared filter state from localStorage');
     
+    // Force a re-render of tasks with no filters
+    console.log('Calling filterTasks with cleared filters');
     filterTasks();
+    
+    // Verify checkboxes are cleared
+    const finalChecked = document.querySelectorAll('#categoryDropdownMenu input[type="checkbox"]:checked');
+    console.log(`Final checked checkboxes: ${finalChecked.length}`);
+    
+    console.log('=== clearFilters END ===');
 }
 
 // Collapse all collapsible sections
