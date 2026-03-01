@@ -514,9 +514,25 @@ function createTaskCard(task) {
     
     // Build buttons
     let buttonsHtml = '';
+    
+    // Check button (mark as completed)
+    if (task.status !== 'completed') {
+        buttonsHtml += `
+            <button class="btn btn-sm btn-success btn-icon mb-1" onclick="markAsCompleted('${task.id}')" title="Mark as Completed">
+                <i class="bi bi-check-lg"></i>
+            </button>
+        `;
+    } else {
+        buttonsHtml += `
+            <button class="btn btn-sm btn-success btn-icon mb-1" onclick="markAsPending('${task.id}')" title="Mark as Pending">
+                <i class="bi bi-arrow-counterclockwise"></i>
+            </button>
+        `;
+    }
+    
     if (hasAIButton) {
         buttonsHtml += `
-            <button class="btn btn-sm btn-success btn-icon mb-1" onclick="executeTask('${task.id}')" title="Execute Task">
+            <button class="btn btn-sm btn-primary btn-icon mb-1" onclick="executeTask('${task.id}')" title="Execute Task">
                 <i class="bi bi-play-fill"></i>
             </button>
         `;
@@ -696,6 +712,50 @@ async function deleteTask(taskId) {
     } catch (error) {
         console.error('Error deleting task:', error);
         alert('Error deleting task');
+    }
+}
+
+// Mark task as completed
+async function markAsCompleted(taskId) {
+    try {
+        const response = await fetch(`/api/tasks/${taskId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ status: 'completed' })
+        });
+        
+        if (response.ok) {
+            await loadTasks();
+        } else {
+            alert('Failed to mark task as completed');
+        }
+    } catch (error) {
+        console.error('Error marking task as completed:', error);
+        alert('Error marking task as completed');
+    }
+}
+
+// Mark task as pending (undo completion)
+async function markAsPending(taskId) {
+    try {
+        const response = await fetch(`/api/tasks/${taskId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ status: 'pending' })
+        });
+        
+        if (response.ok) {
+            await loadTasks();
+        } else {
+            alert('Failed to mark task as pending');
+        }
+    } catch (error) {
+        console.error('Error marking task as pending:', error);
+        alert('Error marking task as pending');
     }
 }
 
