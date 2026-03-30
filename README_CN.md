@@ -29,7 +29,7 @@
 - **独立工作区**：每个任务在 `data/task_folders/` 中都有自己的文件夹
 
 ### 高级功能
-- **AI 驱动的执行**：使用 iFlow CLI 执行任务，具有 AI 权限检查
+- **AI 驱动的执行**：使用 OpenCode 执行任务，具有 AI 权限检查
 - **AI 自然语言自动填充**：解析自然语言输入以自动填充表单（新建任务、筛选任务、排序方式），并提供确认预览
 - **Canvas LMS 集成**：从 Canvas LMS 获取并显示作业，实时更新
 
@@ -62,7 +62,7 @@
 
 - Python 3.7 或更高版本
 - pip（Python 包管理器）
-- iFlow CLI（用于 AI 驱动的任务执行）
+- OpenCode（用于 AI 驱动的任务执行）
 - 现代网页浏览器（Chrome、Firefox、Safari、Edge）
 
 ## 安装
@@ -104,7 +104,7 @@ cp .env.example .env
 编辑 `.env` 来配置：
 
 - `DATA_DIR` - 存储任务数据的目录（默认：`./data`）
-- `IFLOW_COMMAND` - 运行 iFlow 的命令（默认：`iflow`）
+- `OPENCODE_COMMAND` - 运行 OpenCode 的命令（默认：`opencode`）
 - `CANVAS_URL` - 您的 Canvas LMS 实例 URL（用于 Canvas 作业小部件）
 - `ACCESS_TOKEN` - Canvas API 访问令牌（用于 Canvas 作业小部件）
 
@@ -188,7 +188,7 @@ python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
    - 显示关于 AI 执行的警告
    - AI 检查任务是否需要修改文件夹之外的文件的权限
    - 如果需要权限：提示确认
-   - 通过 iFlow CLI 执行任务
+   - 通过 OpenCode 执行任务
    - 状态自动设置为"已完成"
 
 ### 筛选和排序
@@ -201,7 +201,7 @@ python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 #### AI 自然语言自动填充
 - **AI 输入框**：在任务页面顶部输入自然语言命令或使用语音输入
 - **语音识别**：点击麦克风按钮说出命令 - 说话时实时转录
-- **解析**：点击"解析"使用 iFlow CLI 分析您的输入
+- **解析**：点击"解析"使用 OpenCode 分析您的输入
 - **确认预览**：在应用之前查看检测到的表单更改
 - **自动展开**：自动填充时表单自动展开
 - **智能检测**：自动识别新建任务、筛选或排序操作
@@ -270,23 +270,24 @@ python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 
 您可以通过在 `.env` 中设置 `DATA_DIR` 环境变量来更改数据目录。
 
-## iFlow 集成
+## OpenCode 集成
 
 ### 前置要求
-安装 iFlow CLI：
+安装 OpenCode：
 ```bash
-npm install -g iflow
+# 按照 OpenCode 的安装说明进行操作
+# 访问 https://github.com/anomalyco/opencode 了解更多详情
 ```
 
 ### 工作原理
 - **权限检查**：AI 分析任务描述以确定执行是否需要修改任务文件夹之外的文件
-- **任务执行**：通过 iFlow CLI 传递适当的上下文执行任务
-- **回退**：如果 iFlow 不可用，则模拟执行并显示成功消息
+- **任务执行**：通过 OpenCode 传递适当的上下文执行任务
+- **回退**：如果 OpenCode 不可用，则模拟执行并显示成功消息
 
-### 配置 iFlow
-默认命令是 `iflow`。您可以在 `.env` 中自定义：
+### 配置 OpenCode
+默认命令是 `opencode`。您可以在 `.env` 中自定义：
 ```
-IFLOW_COMMAND=/path/to/iflow
+OPENCODE_COMMAND=/path/to/opencode
 ```
 
 ## 停止应用
@@ -308,8 +309,8 @@ source venv/bin/activate
 ```
 
 ### AI 执行不工作
-- 验证 iFlow CLI 已安装且可访问
-- 检查 `.env` 中的 iFlow 命令路径
+- 验证 OpenCode 已安装且可访问
+- 检查 `.env` 中的 OpenCode 命令路径
 - 检查浏览器控制台是否有错误消息
 
 ### 任务未显示
@@ -366,7 +367,7 @@ Open2Do/
 │   ├── main.py              # FastAPI 应用和 API 端点（包括 Canvas LMS 集成）
 │   ├── models.py            # Pydantic 数据模型
 │   ├── storage.py           # JSON 存储处理器，支持用户配置文件
-│   ├── ai_scheduler.py      # iFlow CLI 集成用于 AI 操作
+│   ├── ai_scheduler.py      # OpenCode 集成用于 AI 操作
 │   ├── static/
 │   │   ├── css/
 │   │   │   └── styles.css   # 自定义深色主题样式

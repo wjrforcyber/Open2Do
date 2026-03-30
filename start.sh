@@ -22,7 +22,7 @@ pip install -r requirements.txt
 if [ ! -f ".env" ]; then
     echo "Creating .env file from .env.example..."
     cp .env.example .env
-    echo "Please edit .env file and add your OpenAI API key if desired."
+    echo "Please edit .env file and configure your settings (OpenCode, Canvas, etc.)."
 fi
 
 # Start the application

@@ -152,7 +152,7 @@ async def get_avatar(filename: str):
 
 @app.post("/api/schedule")
 async def schedule_tasks():
-    """Schedule tasks using iFlow."""
+    """Schedule tasks using OpenCode."""
     tasks = storage.get_tasks()
     # Only schedule pending tasks
     pending_tasks = [t for t in tasks if t.status == TaskStatus.pending]
@@ -187,7 +187,7 @@ async def execute_task(task_id: str):
     
     if not requires_permission:
         # Auto-execute without permission
-        result = await ai_scheduler.execute_task_via_iflow(task)
+        result = await ai_scheduler.execute_task_via_opencode(task)
         execution_result["status"] = "executed"
         execution_result["result"] = result
         
@@ -209,7 +209,7 @@ async def confirm_execute_task(task_id: str):
         raise HTTPException(status_code=404, detail="Task not found")
     
     # Execute with permission
-    result = await ai_scheduler.execute_task_via_iflow(task)
+    result = await ai_scheduler.execute_task_via_opencode(task)
     
     # Update task status to completed after execution
     storage.update_task(task_id, TaskUpdate(status=TaskStatus.completed))

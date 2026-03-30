@@ -31,7 +31,7 @@ A modern, feature-rich local web-based TODO application with AI-powered task exe
 - **Isolated Workspaces**: Each task gets its own folder in `data/task_folders/`
 
 ### Advanced Features
-- **AI-Powered Execution**: Execute tasks using iFlow CLI with AI permission checking
+- **AI-Powered Execution**: Execute tasks using OpenCode with AI permission checking
 - **AI Natural Language Autofill**: Parse natural language input to automatically fill forms (New Task, Filter Tasks, Sort By) with confirmation preview
 - **Canvas LMS Integration**: Fetch and display assignments from Canvas LMS with real-time updates
 
@@ -106,7 +106,7 @@ cp .env.example .env
 Edit `.env` to configure:
 
 - `DATA_DIR` - Directory where task data will be stored (default: `./data`)
-- `IFLOW_COMMAND` - Command to run iFlow (default: `iflow`)
+- `OPENCODE_COMMAND` - Command to run OpenCode (default: `opencode`)
 - `CANVAS_URL` - Your Canvas LMS instance URL (for Canvas Assignments widget)
 - `ACCESS_TOKEN` - Canvas API access token (for Canvas Assignments widget)
 
@@ -190,7 +190,7 @@ A new isolated folder will be created in `data/task_folders/` for each task.
    - Shows warning about AI execution
    - AI checks if task needs permission to modify files outside folder
    - If permission needed: prompts for confirmation
-   - Task executes via iFlow CLI
+    - Task executes via OpenCode
    - Status automatically set to "Completed"
 
 ### Filtering and Sorting
@@ -203,7 +203,7 @@ A new isolated folder will be created in `data/task_folders/` for each task.
 #### AI Natural Language Autofill
 - **AI Input Box**: Type natural language commands or use voice input at the top of the Tasks page
 - **Speech Recognition**: Click the microphone button to speak commands - real-time transcription as you speak
-- **Parse**: Click "Parse" to analyze your input using iFlow CLI
+- **Parse**: Click "Parse" to analyze your input using OpenCode
 - **Confirmation Preview**: Review detected form changes before applying
 - **Auto-Expand**: Forms automatically expand when autofilled
 - **Smart Detection**: Automatically identifies New Task, Filter, or Sort operations
@@ -272,23 +272,24 @@ All data is stored in the configured `DATA_DIR` (default: `./data`):
 
 You can change the data directory by setting the `DATA_DIR` environment variable in `.env`.
 
-## iFlow Integration
+## OpenCode Integration
 
 ### Prerequisites
-Install iFlow CLI:
+Install OpenCode:
 ```bash
-npm install -g iflow
+# Follow the installation instructions for OpenCode
+# Visit https://github.com/anomalyco/opencode for more details
 ```
 
 ### How It Works
 - **Permission Check**: AI analyzes task description to determine if execution requires modifying files outside the task folder
-- **Task Execution**: Tasks are executed through iFlow CLI with proper context
-- **Fallback**: If iFlow is unavailable, execution is simulated with success message
+- **Task Execution**: Tasks are executed through OpenCode with proper context
+- **Fallback**: If OpenCode is unavailable, execution is simulated with success message
 
-### Configuring iFlow
-The default command is `iflow`. You can customize this in `.env`:
+### Configuring OpenCode
+The default command is `opencode`. You can customize this in `.env`:
 ```
-IFLOW_COMMAND=/path/to/iflow
+OPENCODE_COMMAND=/path/to/opencode
 ```
 
 ## Stopping the Application
@@ -310,8 +311,8 @@ source venv/bin/activate
 ```
 
 ### AI Execution Not Working
-- Verify iFlow CLI is installed and accessible
-- Check the iFlow command path in `.env`
+- Verify OpenCode is installed and accessible
+- Check the OpenCode command path in `.env`
 - Check browser console for error messages
 
 ### Tasks Not Appearing
@@ -368,7 +369,7 @@ Open2Do/
 │   ├── main.py              # FastAPI application and API endpoints (includes Canvas LMS integration)
 │   ├── models.py            # Pydantic data models
 │   ├── storage.py           # JSON storage handler with user profile support
-│   ├── ai_scheduler.py      # iFlow CLI integration for AI operations
+│   ├── ai_scheduler.py      # OpenCode integration for AI operations
 │   ├── static/
 │   │   ├── css/
 │   │   │   └── styles.css   # Custom styling with dark theme
